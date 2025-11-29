@@ -58,6 +58,7 @@ export function WalletConnect() {
             border: "1px solid #ccc",
             borderRadius: "4px",
             background: "white",
+            color: "#333",
             cursor: "pointer",
           }}
         >

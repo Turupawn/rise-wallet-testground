@@ -30,7 +30,7 @@ export function useTransaction() {
       return {
         success: true,
         error: null,
-        data: { ...result, usedSessionKey: false },
+        data: result,
       };
     } catch (error) {
       console.log("transaction-error: ", error);

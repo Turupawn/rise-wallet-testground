@@ -13,12 +13,10 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4",
-    "vite-plugin-mkcert": "^1.17.9"
+    "vite": "^7.2.4"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.10",
-    "ox": "^0.9.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rise-wallet": "^0.2.29",
