@@ -1,6 +1,6 @@
 import { PERMISSIONS } from "../config/permissions";
 import { P256, PublicKey } from "ox";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { toHex, parseEther } from "viem";
 
@@ -9,6 +9,8 @@ export function useSessionKey() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [keyPair, setKeyPair] = useState<{ publicKey: string; privateKey: string } | null>(null);
 
   const createSessionKey = useCallback(async () => {
     if (!isConnected || !address) {
@@ -35,6 +37,10 @@ export function useSessionKey() {
         `porto.sessionKey.${publicKey}`,
         JSON.stringify({ privateKey, publicKey })
       );
+
+      // Store the public key and key pair in state
+      setSessionKey(publicKey);
+      setKeyPair({ publicKey, privateKey });
 
       // Get provider and call grantPermissions directly
       const provider = (await connector.getProvider()) as any;
@@ -80,11 +86,36 @@ export function useSessionKey() {
     }
   }, [isConnected, address, connector]);
 
+  // Load session key from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const keys = Object.keys(localStorage).filter((key) =>
+        key.startsWith("porto.sessionKey.")
+      );
+      if (keys.length > 0) {
+        try {
+          const keyData = localStorage.getItem(keys[0]);
+          if (keyData) {
+            const parsed = JSON.parse(keyData);
+            if (parsed.publicKey && parsed.privateKey) {
+              setSessionKey(parsed.publicKey);
+              setKeyPair({ publicKey: parsed.publicKey, privateKey: parsed.privateKey });
+            }
+          }
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+    }
+  }, []);
+
   return {
     createSessionKey,
     isCreating,
     error,
     success,
+    sessionKey,
+    keyPair,
   };
 }
 
