@@ -1,5 +1,6 @@
-import { WalletConnect } from "./components/WalletConnect";
-import { SendETH } from "./components/SendETH";
+import { WalletConnection } from "./components/WalletConnection";
+import { SessionKey } from "./components/SessionKey";
+import { SendWithPasskey } from "./components/SendWithPasskey";
 import { WalletProvider } from "./providers/WalletProvider";
 import "./style.css";
 
@@ -9,9 +10,10 @@ function App() {
       <div>
         <h1>RISE Wallet Testground</h1>
         <div style={{ marginTop: "20px" }}>
-          <WalletConnect />
+          <WalletConnection />
         </div>
-        <SendETH />
+        <SendWithPasskey />
+        <SessionKey />
       </div>
     </WalletProvider>
   );

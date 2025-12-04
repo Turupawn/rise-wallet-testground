@@ -1,14 +1,27 @@
 import { useState } from "react";
-import { parseEther } from "viem";
-import { useAccount } from "wagmi";
-import { useTransaction } from "../hooks/useTransaction";
+import { encodeFunctionData, parseUnits } from "viem";
+import { useAccount, useSendCalls } from "wagmi";
 
+const TOKEN_ADDRESS = "0xC229b10f0497878Cb3D3E9663b366BC535939FE8" as const;
 const RECIPIENT_ADDRESS = "0xbef34f2FCAe62dC3404c3d01AF65a7784c9c4A19" as const;
-const AMOUNT_ETH = "0.00012";
+const AMOUNT_TOKENS = "50";
 
-export function SendETH() {
-  const { address, isConnected } = useAccount();
-  const { execute } = useTransaction();
+const ERC20_ABI = [
+  {
+    name: "transfer",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "recipient", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+export function SendWithPasskey() {
+  const { isConnected } = useAccount();
+  const { sendCallsAsync } = useSendCalls();
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -24,31 +37,27 @@ export function SendETH() {
     setIsPending(true);
 
     try {
-      const amountInWei = parseEther(AMOUNT_ETH);
-
-      const response = await execute({
-        calls: [
-          {
-            to: RECIPIENT_ADDRESS,
-            value: amountInWei,
-          },
-        ],
+      const data = encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [RECIPIENT_ADDRESS, parseUnits(AMOUNT_TOKENS, 18)],
       });
 
-      setIsPending(false);
+      const result = await sendCallsAsync({
+        calls: [
+          {
+            to: TOKEN_ADDRESS,
+            data,
+          },
+        ],
+        version: "1",
+      } as any);
 
-      if (response.success) {
-        const resultString = JSON.stringify(response.data, (key, value) =>
-          typeof value === 'bigint' ? value.toString() : value
-        );
-        setResult(`Transaction sent! Result: ${resultString}`);
-      } else {
-        setError(
-          response.error?.shortMessage ||
-            response.error?.message ||
-            "Failed to send transaction. Please try again."
-        );
-      }
+      setIsPending(false);
+      const resultString = JSON.stringify(result, (_key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      );
+      setResult(`Transaction sent! Result: ${resultString}`);
     } catch (err: any) {
       setIsPending(false);
       setError(
@@ -61,9 +70,9 @@ export function SendETH() {
 
   return (
     <div style={{ marginTop: "20px", padding: "20px", border: "1px solid #ccc", borderRadius: "8px" }}>
-      <h2>Send ETH</h2>
+      <h2>Send with Passkey</h2>
       <p style={{ marginTop: "10px", color: "#666" }}>
-        Send {AMOUNT_ETH} ETH to {RECIPIENT_ADDRESS.slice(0, 6)}...
+        Send {AMOUNT_TOKENS} tokens to {RECIPIENT_ADDRESS.slice(0, 6)}...
         {RECIPIENT_ADDRESS.slice(-4)}
       </p>
       <button
@@ -84,7 +93,7 @@ export function SendETH() {
           ? "Sending..."
           : !isConnected
           ? "Connect Wallet First"
-          : `Send ${AMOUNT_ETH} ETH`}
+          : `Send ${AMOUNT_TOKENS} tokens`}
       </button>
 
       {result && (
